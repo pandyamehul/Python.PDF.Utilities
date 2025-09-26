@@ -18,3 +18,5 @@ Ref. file - mergepdf.py
 ## Compare PDF Files
 
 - This section is under development. The goal is to create a script that compares two PDF files and highlights the differences between them.
+
+Ref. file - compare.pdf.1.py (to be created)
