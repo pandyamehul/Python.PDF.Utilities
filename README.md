@@ -12,3 +12,5 @@
 
 - Update the file paths in the script to point to your actual PDF files and desired output location.
 - Run the script, and it will create a merged PDF file containing all the specified PDFs in the order they were added.
+
+Ref. file - mergepdf.py
