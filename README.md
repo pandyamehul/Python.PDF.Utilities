@@ -14,3 +14,7 @@
 - Run the script, and it will create a merged PDF file containing all the specified PDFs in the order they were added.
 
 Ref. file - mergepdf.py
+
+## Compare PDF Files
+
+- This section is under development. The goal is to create a script that compares two PDF files and highlights the differences between them.
