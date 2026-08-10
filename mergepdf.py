@@ -1,3 +1,6 @@
+# This script merges multiple PDF files into a single PDF file.
+# It uses the PyPDF2 library's PdfMerger to append PDFs in order and write the combined output.
+
 from PyPDF2 import PdfMerger
 
 merger = PdfMerger()
