@@ -10,10 +10,30 @@
   pip install PyPDF2
   ```
 
-- Update the file paths in the script to point to your actual PDF files and desired output location.
-- Run the script, and it will create a merged PDF file containing all the specified PDFs in the order they were added.
+- Run the script from the command line, passing the input PDF paths and the desired output path. It will create a merged PDF file containing all the specified PDFs in the order they were added:
+
+  ```pwsh
+  python mergepdf.py -o Merged.pdf PDF1.pdf PDF2.pdf PDF3.pdf
+  ```
 
 Ref. file - mergepdf.py
+
+## Read/Extract Data from PDF Files
+
+- Python script that unlocks password-protected PDFs in a directory, extracts transaction-style tables from them, and appends the cleaned data to an Excel workbook.
+- Make sure to install the required libraries using pip if you haven't already:
+
+  ```pwsh
+  pip install pikepdf pdfplumber tabulate openpyxl
+  ```
+
+- Run the script from the command line, passing the PDF directory, output Excel file path, and password. If the password is omitted, you will be prompted for it:
+
+  ```pwsh
+  python readpdf.h.py -d /path/to/pdf/dir -o output.xlsx -p <password>
+  ```
+
+Ref. file - readpdf.h.py
 
 ## Compare PDF Files
 
