@@ -14,8 +14,8 @@ echoing it to the console.
 """
 
 import argparse
-import csv
 import getpass
+import io
 import os
 import re
 import sys
@@ -53,10 +53,13 @@ def parse_args(argv=None):
 
 
 # Step 1: Unlock the PDF
-def unlock_pdf(input_path, output_path, password):
-    """Remove password protection from a PDF and save it to output_path."""
+def unlock_pdf(input_path, password):
+    """Remove password protection from a PDF and return the unlocked bytes in memory."""
+    buffer = io.BytesIO()
     with pikepdf.open(input_path, password=password) as pdf:
-        pdf.save(output_path)
+        pdf.save(buffer)
+    buffer.seek(0)
+    return buffer
 
 
 # Step 2: Extract 'Text data', 'Ref. Date', and 'Trn value' from column 2
@@ -112,14 +115,7 @@ def extract_parts_from_column(table, column_index=1):
     return new_table
 
 
-# Step 3: Append the cleaned data to a CSV file
-def append_to_csv(file_path, data):
-    with open(file_path, mode='a', newline='\n') as file:
-        writer = csv.writer(file)
-        writer.writerows(data)
-
-
-# Step 4: Append the cleaned data to an Excel workbook, splitting multi-line cells into rows
+# Step 3: Append the cleaned data to an Excel workbook, splitting multi-line cells into rows
 def append_to_excel(file_path, data):
     if os.path.isfile(file_path):
         workbook = openpyxl.load_workbook(file_path)
@@ -138,13 +134,17 @@ def append_to_excel(file_path, data):
                 cell_lines = str(cell).split('\n')
                 new_row.append(cell_lines[i] if i < len(cell_lines) else '')
             sheet.append(new_row)
+            # openpyxl would store a leading '=' as a formula; keep PDF text as plain text
+            for cell in sheet[sheet.max_row]:
+                if isinstance(cell.value, str) and cell.value.startswith('='):
+                    cell.data_type = 's'
 
     workbook.save(file_path)
 
 
-# Step 5: Extract and print tables from page 2 onward
-def extract_and_print_tables(pdf_path, output_excel_path):
-    with pdfplumber.open(pdf_path) as pdf:
+# Step 4: Extract and print tables from page 2 onward
+def extract_and_print_tables(pdf_source, output_excel_path):
+    with pdfplumber.open(pdf_source) as pdf:
         for i, page in enumerate(pdf.pages[1:], start=2):  # Skip page 1
             print(f"\n--- Page {i} ---")
             tables = page.extract_tables()
@@ -157,23 +157,18 @@ def extract_and_print_tables(pdf_path, output_excel_path):
                 append_to_excel(output_excel_path, cleaned_table)
 
 
-# Step 6: Process all PDFs in a directory
+# Step 5: Process all PDFs in a directory
 def process_pdfs_in_directory(directory, password, output_excel_path):
     for root, _, files in os.walk(directory):
         for file in files:
             if file.lower().endswith('.pdf'):
                 pdf_path = os.path.join(root, file)
-                unlocked_pdf_path = os.path.join(root, "t." + file)
                 print(f"Processing: {pdf_path}")
                 try:
-                    unlock_pdf(pdf_path, unlocked_pdf_path, password)
-                    extract_and_print_tables(unlocked_pdf_path, output_excel_path)
+                    unlocked_pdf = unlock_pdf(pdf_path, password)
+                    extract_and_print_tables(unlocked_pdf, output_excel_path)
                 except pikepdf.PasswordError:
                     print(f"Error: incorrect password for {pdf_path}, skipping.", file=sys.stderr)
-                finally:
-                    # Clean up the temporary unlocked file
-                    if os.path.isfile(unlocked_pdf_path):
-                        os.remove(unlocked_pdf_path)
 
 
 def main(argv=None):
