@@ -1,9 +1,8 @@
 """This script merges multiple PDF files into a single PDF file.
 
-It uses the PyPDF2 library's PdfMerger to append PDFs in order and write the
-combined output. Input and output paths are provided via command-line
-arguments so the script works with any file location, instead of hardcoded
-paths.
+It uses the pypdf library to append PDFs in order and write the combined
+output. Input and output paths are provided via command-line arguments so the
+script works with any file location, instead of hardcoded paths.
 
 Usage:
     python mergepdf.py -o Merged.pdf PDF1.pdf PDF2.pdf PDF3.pdf
@@ -13,7 +12,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from PyPDF2 import PdfMerger
+from pypdf import PdfWriter
+from pypdf.errors import PdfReadError
 
 
 def parse_args(argv=None):
@@ -48,17 +48,20 @@ def merge_pdfs(input_paths, output_path):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with PdfMerger() as merger:
+    writer = PdfWriter()
+    try:
         for input_path in input_paths:
-            merger.append(str(input_path))
-        merger.write(str(output_path))
+            writer.append(str(input_path))
+        writer.write(str(output_path))
+    finally:
+        writer.close()
 
 
 def main(argv=None):
     args = parse_args(argv)
     try:
         merge_pdfs(args.input_files, args.output)
-    except (FileNotFoundError, OSError) as error:
+    except (OSError, PdfReadError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
